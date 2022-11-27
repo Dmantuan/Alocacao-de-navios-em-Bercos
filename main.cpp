@@ -28,7 +28,6 @@ int main(int agrc, char** argv)
     return 0;
 }
 
-
 /*
 void heuConAle(Solucao &s)
 {
@@ -203,12 +202,27 @@ void buildingSolution(Solucao s){
 	int index;
 	int sizeShip;
 	int arriveShip;
-	int aux=0;  //Vai servir para saber qual e o X
-	int sobra;  //Saber quanto  sobrou do berco anterior
-	int totalDoBerco;
-
+	int indexBerco = 0;
+	int X=0;  //Vai servir para saber qual e o X
+	int h=0; //Altura referente ao tempo no grafico
+	int hProx=0; //Para guardar qualsera a proxima altura
 	int matBercoAux[MAX_BER][2];
 	memcpy(&matBercoAux, &matBercos, sizeof(matBercos));
+
+	/*
+		-Forma saber a posicao (X) do navio
+			A cada um dos casos de iteracao de colocar o navio no berco ir incrementando o X
+		-Forma para saber o tempo (Y) do navio
+			Buscar o mais o mais alto e colocar todo mundo nessa 'linha' se possivel
+	*/
+
+	//Pegando o tempo do berco que abre por ultimo
+	for(int j = 0; j < numNav; j++){
+		if(vetOpBer[j]>h){
+			h=vetOpBer[j];
+		}
+	}
+	hProx=h;
 
 	for(int i =0; i < numNav; i++){ //Percorrer o vetIndNavOrd
 		//Pegando o navio em questao
@@ -216,29 +230,39 @@ void buildingSolution(Solucao s){
 		sizeShip = vetTamNav[index];
 		arriveShip = vetInNav[index];
 
-		/*
-			TODO: 
-				-Forma saber a posicao (X) do navio
-				-Forma para saber o tempo (Y) do navio
-		*/
-
-		for(int indexBerco = 0; indexBerco < numBer; indexBerco++){ //Percorrer os bercos
+		for(indexBerco; indexBerco < numBer; indexBerco++){ //Percorrer os bercos
 			if(matTempNavBer[indexBerco][index]!=0){ //Neste caso o navio pode ser atendido nesse berco
 				if(matBercoAux[indexBerco][0]==0){  //caso inicial
 					if(matBercoAux[indexBerco][1]+matBercoAux[indexBerco+1][0]>=sizeShip){
 						if(matBercoAux[indexBerco][1]>=sizeShip){
 							matBercoAux[indexBerco][1] = matBercoAux[indexBerco][1]-sizeShip;
-							/*
-								TODO: colocar o navio na solucao
-							*/
+							
+							/*Colocando o navio na solucao*/
+							s.vetPos[index]=X;
+							s.vetTemp[index]=h;
+							s.vetSol[index]=indexBerco;
+							
+							//Atualizando as variaves de controle X e h
+							X = X + sizeShip;
+							if(hProx < h+sizeShip){
+								hProx = h+sizeShip;
+							}
 							break;
 						}
 						else{
 							matBercoAux[indexBerco+1][0] = (matBercoAux[indexBerco][1]+matBercoAux[indexBerco+1][0])-sizeShip;
 							matBercoAux[indexBerco][1] = 0;
-							/*
-								TODO: colocar o navio na solucao
-							*/
+							
+							/*Colocando o navio na solucao*/
+							s.vetPos[index]=X;
+							s.vetTemp[index]=h;
+							s.vetSol[index]=indexBerco;
+							
+							//Atualizando as variaves de controle X e h
+							X = X + sizeShip;
+							if(hProx < h+sizeShip){
+								hProx = h+sizeShip;
+							}
 							break;
 						}
 					}
@@ -246,12 +270,22 @@ void buildingSolution(Solucao s){
 				else{
 					if(matBercoAux[indexBerco][1]==0){  //Ultimo caso
 						if(matBercoAux[indexBerco][0]+matBercoAux[indexBerco-1][1]>=sizeShip){
-							/*
-								TODO: colocar o navio na solucao
-							*/
+							
+							/*Colocando o navio na solucao*/
+							s.vetPos[index]=X;
+							s.vetTemp[index]=h;
+							s.vetSol[index]=indexBerco;
+							
+							//Atualizando as variaves de controle X e h
+							if(hProx < h+sizeShip){
+								hProx = h+sizeShip;
+							}
+							X = X + sizeShip;
 						}
 						if(indexBerco == numBer-1){
 							indexBerco = -1;
+							X = 0;
+							h=hProx;
 							memcpy(&matBercoAux, &matBercos, sizeof(matBercos));
 						}
 						break;
@@ -260,18 +294,34 @@ void buildingSolution(Solucao s){
 						if(matBercoAux[indexBerco-1][1]+matBercoAux[indexBerco][0]+matBercoAux[indexBerco][1]+matBercoAux[indexBerco+1][0]>=sizeShip){
 							if(matBercoAux[indexBerco-1][1]>=sizeShip){
 								matBercoAux[indexBerco-1][1] = (matBercoAux[indexBerco-1][1])-sizeShip;
-								/*
-									TODO: colocar o navio na solucao
-								*/
+								
+								/*Colocando o navio na solucao*/
+								s.vetPos[index]=X;
+								s.vetTemp[index]=h;
+								s.vetSol[index]=indexBerco;
+								
+								//Atualizando as variaves de controle X e h
+								if(hProx < h+sizeShip){
+									hProx = h+sizeShip;
+								}
+								X = X + sizeShip;
 								break;
 							}
 							else{
 								if(matBercoAux[indexBerco-1][1]+matBercoAux[indexBerco][0]>=sizeShip){
 									matBercoAux[indexBerco][0] = (matBercoAux[indexBerco][0]+matBercoAux[indexBerco-1][1])-sizeShip;
 									matBercoAux[indexBerco-1][1] = 0;
-									/*
-										TODO: colocar o navio na solucao
-									*/
+									
+									/*Colocando o navio na solucao*/
+									s.vetPos[index]=X;
+									s.vetTemp[index]=h;
+									s.vetSol[index]=indexBerco;
+									
+									//Atualizando as variaves de controle X e h
+									if(hProx < h+sizeShip){
+										hProx = h+sizeShip;
+									}
+									X = X + sizeShip;
 									break;
 								}
 								else{
@@ -279,9 +329,17 @@ void buildingSolution(Solucao s){
 										matBercoAux[indexBerco][1] = (matBercoAux[indexBerco-1][1]+matBercoAux[indexBerco][0]+matBercoAux[indexBerco][1])-sizeShip;
 										matBercoAux[indexBerco-1][1] = 0;
 										matBercoAux[indexBerco][0] = 0;
-										/*
-											TODO: colocar o navio na solucao
-										*/
+										
+										/*Colocando o navio na solucao*/
+										s.vetPos[index]=X;
+										s.vetTemp[index]=h;
+										s.vetSol[index]=indexBerco;
+
+										//Atualizando as variaves de controle X e h
+										X = X + sizeShip;
+										if(hProx < h+sizeShip){
+											hProx = h+sizeShip;
+										}
 										break;
 									}
 									else{
@@ -290,9 +348,17 @@ void buildingSolution(Solucao s){
 											matBercoAux[indexBerco-1][1] = 0;
 											matBercoAux[indexBerco][1] = 0;
 											matBercoAux[indexBerco][0] = 0;
-											/*
-												TODO: colocar o navio na solucao
-											*/
+											
+											/*Colocando o navio na solucao*/
+											s.vetPos[index]=X;
+											s.vetTemp[index]=h;
+											s.vetSol[index]=indexBerco;
+										
+											//Atualizando as variaves de controle X e h
+											if(hProx < h+sizeShip){
+												hProx = h+sizeShip;
+											}
+											X = X + sizeShip;
 											break;
 										}
 									}
@@ -300,6 +366,21 @@ void buildingSolution(Solucao s){
 							}
 						}
 					}
+				}
+			}
+			// Para os casos onde o navio nao pode ser atendido
+			if(matBercoAux[indexBerco][0]==0){ //Caso iniial
+				//Nao acontece nada
+			}
+			else {
+				if(indexBerco == numNav-1){ //Caso final
+					X = 0;
+					indexBerco = -1;
+					h=hProx;
+					memcpy(&matBercoAux, &matBercos, sizeof(matBercos));
+				}
+				else{
+					X = X + matBercoAux[indexBerco-1][1] + matBercos[indexBerco][0];
 				}
 			}
 		}
