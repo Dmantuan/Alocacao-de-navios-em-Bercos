@@ -28,10 +28,13 @@ void ler_instancia(char *arq);
 void testar_instancia(char *arq);
 
 //Outros
-//void heuConGul(Solucao &s);
-void heuConAle(Solucao &s);
+int tempServ;
+int vetTempAux[MAX_BER];
+
+//Iniciaclizoes
 void calcFO(Solucao &s);
 void escreverSolucao(Solucao &s, const bool flag);
 
-void cloneSolucao(Solucao &s, Solucao &S); //perguntar se precisa!!!
+void clonarSolucao(Solucao &s, Solucao &clone);
 void lerSolucao(char *arq);
+void buildingSolution(Solucao &s);
