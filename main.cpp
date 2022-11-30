@@ -2,25 +2,66 @@
 #include <stdlib.h>
 #include <time.h>
 #include <memory.h>
+#include <stdio.h>
 
 #include "consts.h"
 
 //#define MODO_TESTE
 
 int main(int agrc, char** argv) 
-{
-	srand(time(NULL));
-	
+{	
 	#ifdef MODO_TESTE
-
-    #else
-        ler_instancia("inst4.txt");
-        testar_instancia("");
+		int k = 0;
+		clock_t h;
+		double tempo;
+		ler_instancia("inst3.txt");
+        //testar_instancia("");
         ordenarObjetos();
         
         Solucao s;
         
-        buildingSolution(s);
+        h = clock();
+        heuConGul(s);
+        h = clock() - h;
+    	tempo = (double)h/CLOCKS_PER_SEC;
+    	printf("Construtiva Gulosa 1 vez: %lf segundos\n", tempo);
+    	
+    	h = clock();
+    	while(k < 100000)
+    	{
+    		heuConGul(s);
+    		k++;
+		}
+        h = clock() - h;
+    	tempo = (double)h/CLOCKS_PER_SEC;
+    	printf("Construtiva Gulosa 100000 vezes: %lf segundos\n", tempo);
+    	
+    	k = 0;
+		
+		h = clock();
+        calcFO(s);
+        h = clock() - h;
+    	tempo = (double)h/CLOCKS_PER_SEC;
+    	printf("Calculo de FO 1 vez: %lf segundos\n", tempo);
+    	
+    	h = clock();
+    	while(k < 100000)
+    	{
+    		calcFO(s);
+    		k++;
+		}
+        h = clock() - h;
+    	tempo = (double)h/CLOCKS_PER_SEC;
+    	printf("Calculo de FO 100000 vez: %lf segundos\n", tempo);
+    	
+        escreverSolucao(s, 0);
+    #else
+        ler_instancia("inst3.txt");
+        ordenarObjetos();
+        
+        Solucao s;
+        
+        heuConGul(s);
 		calcFO(s);
 		escreverSolucao(s,0);
 		
@@ -28,7 +69,6 @@ int main(int agrc, char** argv)
     
     return 0;
 }
-
 
 void ordenarObjetos()
 {
@@ -132,23 +172,24 @@ void calcFO(Solucao &s)
 	for(int j = 0; j < numNav; j++) //calculo de FO
 	{
 		s.funObj += s.vetTemp[j] - vetInNav[j] + matTempNavBer[s.vetSol[j]][j];
-		tempServ = s.funObj;
+		s.tempServ = s.funObj;
 	}
 	
 	for(int i = 0; i < numBer; i++) //estourar tempo máximo do berço
 	{
 		if(vetTempAux[i] > vetClsBer[i])
-			s.funObj += 10000;
+			s.funObj += 1000;
 	}
 	
-	for(int j = 0; j < numNav; j++) //estourar horario do navio sair do porto
+	for(int j = 0; j < numNav; j++)  
 	{
 		for(int i = 0; i < numBer; i++)
 		{
-			if(s.vetTemp[j] + matTempNavBer[j][i] > vetOutNav[j])
-			{
-				s.funObj += 10000;
-			}
+			if(s.vetTemp[j] + matTempNavBer[j][i] > vetOutNav[j]) //estourar horario do navio sair do porto
+				s.funObj += 1000;
+				
+			if(s.vetTemp[j] < vetInNav[j]) //navio ser atendido antes de chegar
+				s.funObj += 1000;
 		}
 	}
 }
@@ -164,9 +205,9 @@ void escreverSolucao(Solucao &s, const bool flag)
 	
 	fprintf(f, "FO: %d\n", s.funObj);
 
-	fprintf(f, "Tempo de Servico: %d\n", tempServ);
+	fprintf(f, "Tempo de servico: %d\n", s.tempServ);
 	
-	fprintf(f, "-------------------------------\n");
+	fprintf(f, "--------------------------\n");
 	fprintf(f, "%-10s%-10s%-10s%-10s\n", "Navio", "Berco", "Tempo", "Posicao");
 	for(int j = 0; j < numNav; j++)
 	{
@@ -177,7 +218,7 @@ void escreverSolucao(Solucao &s, const bool flag)
 		fclose(f);
 }
 
-void buildingSolution(Solucao &s){
+void heuConGul(Solucao &s){
 	int index;
 	int sizeShip;
 	int arriveShip;
@@ -253,7 +294,7 @@ void buildingSolution(Solucao &s){
 				else{
 					if(matBercoAux[indexBerco][1]==0){  //Ultimo caso
 						if(matBercoAux[indexBerco][0]+matBercoAux[indexBerco-1][1]>=sizeShip){
-							
+							matBercoAux[indexBerco][0]= matBercoAux[indexBerco][0]-sizeShip;
 							/*Colocando o navio na solucao*/
 							s.vetPos[index]=X;
 							s.vetTemp[index]=h;
@@ -365,10 +406,7 @@ void buildingSolution(Solucao &s){
 				}
 			}
 			// Para os casos onde o navio nao pode ser atendido
-			if(matBercoAux[indexBerco][0]==0){ //Caso iniial
-				//Nao acontece nada
-			}
-			else {
+			if(matBercoAux[indexBerco][0]!=0){ 
 				if(indexBerco == numBer-1){ //Caso final
 					X = 0;
 					indexBerco = -1;
@@ -376,9 +414,30 @@ void buildingSolution(Solucao &s){
 					memcpy(&matBercoAux, &matBercos, sizeof(matBercos));
 				}
 				else{
-					X = X + matBercoAux[indexBerco-1][1] + matBercos[indexBerco][0];
+					X = X + matBercoAux[indexBerco-1][1] + matBercoAux[indexBerco][0];
 				}
 			}
 		}
 	}
+}
+
+void lerSolucao(char *arq, Solucao &s)
+{
+	int auxNav, auxBer, aux = 0;
+	
+	FILE *f = fopen(arq, "r");
+	fscanf(f, "FO: %d\n", &s.funObj); //FO
+	fscanf(f, "Tempo de servico: %d\n", &s.tempServ); //Tempo de servi�o
+	fscanf(f, "--------------------------\n");
+	fscanf(f, "Navio Berco Tempo Posicao\n");
+	while(!feof(f)) //tabela de informa��es
+	{
+		fscanf(f, "%d ", &auxNav);
+		fscanf(f, "%d ", &auxBer);
+		fscanf(f, "%d ", &s.vetTemp[aux]);
+		fscanf(f, "%d ", &s.vetPos[aux]);
+		aux++;
+		s.vetSol[auxNav - 1] = auxBer - 1;
+	}
+	fclose(f);
 }

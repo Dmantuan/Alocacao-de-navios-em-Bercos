@@ -8,6 +8,7 @@ typedef struct tSolucao
 	int vetPos[MAX_NAV]; 
 	int vetSol[MAX_NAV]; //qual navio est� em qual ber�o
 	int funObj;
+	int tempServ;
 }Solucao;
 
 // Dados de entrada
@@ -28,7 +29,6 @@ void ler_instancia(char *arq);
 void testar_instancia(char *arq);
 
 //Outros
-int tempServ;
 int vetTempAux[MAX_BER];
 
 //Iniciaclizoes
@@ -36,5 +36,5 @@ void calcFO(Solucao &s);
 void escreverSolucao(Solucao &s, const bool flag);
 
 void clonarSolucao(Solucao &s, Solucao &clone);
-void lerSolucao(char *arq);
-void buildingSolution(Solucao &s);
+void lerSolucao(char *arq, Solucao &s);
+void heuConGul(Solucao &s);

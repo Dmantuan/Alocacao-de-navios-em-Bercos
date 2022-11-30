@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 pio.renderers.default='browser'
 
-inst_id = 4
+inst_id = 3
 arq_instancia = 'inst' + str(inst_id) + '.txt'
 arq_solucao = 'Solucao.sol'
 
